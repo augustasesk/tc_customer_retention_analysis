@@ -1,0 +1,65 @@
+WITH
+  subscription_data AS (
+  SELECT
+    user_pseudo_id,
+    subscription_start,
+    DATE_TRUNC(subscription_start, WEEK) AS cohort_week,
+    subscription_end
+  FROM
+    `tc-da-1.turing_data_analytics.subscriptions`
+  WHERE
+    subscription_start < '2021-02-07' ),
+  cohorts AS (
+  SELECT
+    DISTINCT DATE_TRUNC(subscription_start, WEEK) AS cohort
+  FROM
+    `tc-da-1.turing_data_analytics.subscriptions`
+  WHERE
+    subscription_start < '2021-02-07' )
+SELECT
+  cohorts.cohort,
+  SUM(CASE
+      WHEN sub_data.subscription_start <= DATE_ADD(sub_data.cohort_week, INTERVAL 6 DAY) THEN 1
+      ELSE 0
+  END
+    ) AS week_0,
+  SUM(CASE
+      WHEN sub_data.subscription_start <= DATE_ADD(sub_data.cohort_week, INTERVAL 6 DAY) AND (sub_data.subscription_end > DATE_ADD(sub_data.cohort_week, INTERVAL 6 DAY) OR sub_data.subscription_end IS NULL) THEN 1
+      ELSE 0
+  END
+    ) AS week_1,
+  SUM(CASE
+      WHEN sub_data.subscription_start <= DATE_ADD(sub_data.cohort_week, INTERVAL 6 DAY) AND (sub_data.subscription_end > DATE_ADD(sub_data.cohort_week, INTERVAL 13 DAY) OR sub_data.subscription_end IS NULL) THEN 1
+      ELSE 0
+  END
+    ) AS week_2,
+  SUM(CASE
+      WHEN sub_data.subscription_start <= DATE_ADD(sub_data.cohort_week, INTERVAL 6 DAY) AND (sub_data.subscription_end > DATE_ADD(sub_data.cohort_week, INTERVAL 20 DAY) OR sub_data.subscription_end IS NULL) THEN 1
+      ELSE 0
+  END
+    ) AS week_3,
+  SUM(CASE
+      WHEN sub_data.subscription_start <= DATE_ADD(sub_data.cohort_week, INTERVAL 6 DAY) AND (sub_data.subscription_end > DATE_ADD(sub_data.cohort_week, INTERVAL 27 DAY) OR sub_data.subscription_end IS NULL) THEN 1
+      ELSE 0
+  END
+    ) AS week_4,
+  SUM(CASE
+      WHEN sub_data.subscription_start <= DATE_ADD(sub_data.cohort_week, INTERVAL 6 DAY) AND (sub_data.subscription_end > DATE_ADD(sub_data.cohort_week, INTERVAL 34 DAY) OR sub_data.subscription_end IS NULL) THEN 1
+      ELSE 0
+  END
+    ) AS week_5,
+  SUM(CASE
+      WHEN sub_data.subscription_start <= DATE_ADD(sub_data.cohort_week, INTERVAL 6 DAY) AND (sub_data.subscription_end > DATE_ADD(sub_data.cohort_week, INTERVAL 41 DAY) OR sub_data.subscription_end IS NULL) THEN 1
+      ELSE 0
+  END
+    ) AS week_6
+FROM
+  subscription_data AS sub_data
+INNER JOIN
+  cohorts
+ON
+  sub_data.cohort_week = cohorts.cohort
+GROUP BY
+  cohorts.cohort
+ORDER BY
+  cohorts.cohort;
